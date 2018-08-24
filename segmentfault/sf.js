@@ -1,8 +1,9 @@
+//1.1.1
 var fs = require('fs');
 var https = require('https');
 var cheerio = require('cheerio');
 var path = './news.json';
-var database = ''; //the whloe news list
+var database = ''; //the whole news list
 var readDone = false; //lock the write stream
 var url = 'https://segmentfault.com/channel/frontend'; //target
 
@@ -30,7 +31,7 @@ fs.exists(path,function(ex){
 });
 
 function save(newdata){
-	database.unshift(newdata); //to keep the sequence of news
+	database = newdata.concat(database); //to keep the sequence of news
 	/***insert '\n' to 'visualize' the json***/
 	var temp = JSON.stringify(database).replace(/,"/g,',\n"');
 	temp = temp.replace(/},/g,'},\n\n');
