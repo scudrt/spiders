@@ -1,4 +1,4 @@
-//1.1.2
+//1.1.3
 var fs = require('fs');
 var http = require('http');
 var async = require('async');
@@ -9,17 +9,16 @@ var iconv = require('iconv-lite');
 var baseUrl = 'http://www.ygdy8.com';
 var url = 'http://www.ygdy8.com/html/gndy/dyzz/list_23_';
 var path = './movies.json';
-var data = '', pageData;
-var readDone = false;
-var currentPage = 0, currentMovie = 1;
-var timeDelay = 10; //x seconds every page 
+var data = '', pageData = [];
+var currentPage = 0;
+var timeDelay = 12; //x seconds every page 
 var event = new events.EventEmitter();
 
 var Movie = function(title,url,download){
 	return {"title":title,"url":url,"download":download};
 }
 
-function mySleep(tickTime){
+function mySleep(tickTime){ //ms
 	var t = new Date();
 	while (new Date() - t < tickTime){;}
 }
@@ -78,7 +77,6 @@ function movieFetch(){
 function pageFetch(){ //get the url list from pages
 	console.log('fetching page '+currentPage);
 	var html = '';
-	pageData = [];
 	http.get(url+currentPage+'.html',function(res){
 		res.on('data',function(data){
 			html+=iconv.decode(data,'gb2312');
@@ -91,12 +89,6 @@ function pageFetch(){ //get the url list from pages
 					movieFetch();
 				}
 			});
-			event.on('moviedone',function(){
-				console.log('page '+currentPage+' done.');
-				--currentPage;
-				save();
-				setTimeout(pageFetch,timeDelay*1000);
-			});
 		});
 	});
 }
@@ -108,9 +100,13 @@ fs.exists('./movies.json',function(ex){
 		var temp = JSON.parse(fs.readFileSync(path).toString());
 		currentPage = temp.page;
 		data = temp.data;
+		event.emit('initok');
+		if (currentPage === 0){
+			currentPage = 1;
+		}
 	}
 	else{
-		console.log('no file,initiating');
+		console.log('creating movies.json');
 		preDeal();
 		event.on('preDealed',function(){
 			fs.writeFile(path,'{"page":'+currentPage+',"data":[]}',function(err){
@@ -118,9 +114,20 @@ fs.exists('./movies.json',function(ex){
 					console.error(err);
 				}
 			});
+			event.emit('initok');
 		})
 		data=[];
 	}
 });
 
-setTimeout(pageFetch,1500);
+event.on('moviedone',function(){
+	console.log('page '+currentPage+' done.');
+	--currentPage;
+	save();
+	pageData = [];
+	setTimeout(pageFetch,timeDelay*1000);
+});
+if (process.argv[2] !== undefined){
+	timeDelay = Number(process.argv[2]);
+}
+event.on('initok',pageFetch);
