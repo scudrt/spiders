@@ -1,4 +1,4 @@
-//1.1.1
+//1.1.2
 var fs = require('fs');
 var http = require('http');
 var async = require('async');
@@ -12,7 +12,6 @@ var path = './movies.json';
 var data = '', pageData;
 var readDone = false;
 var currentPage = 0, currentMovie = 1;
-var loopList = [];
 var timeDelay = 10; //x seconds every page 
 var event = new events.EventEmitter();
 
@@ -35,6 +34,7 @@ function preDeal(){
 		res.on('end',function(){
 			var $ = cheerio.load(tempHtml);
 			currentPage = Number($('option').last().text());
+			event.emit('preDealed');
 		});
 	});
 }
@@ -87,8 +87,10 @@ function pageFetch(){ //get the url list from pages
 			var $ = cheerio.load(html);
 			$('a.ulink').each(function(){
 				pageData.push(new Movie($(this).text(),baseUrl+$(this).attr('href'),[]));
+				if ($(this).text() === $('a.ulink').last().text()){
+					movieFetch();
+				}
 			});
-			movieFetch();
 			event.on('moviedone',function(){
 				console.log('page '+currentPage+' done.');
 				--currentPage;
@@ -110,11 +112,13 @@ fs.exists('./movies.json',function(ex){
 	else{
 		console.log('no file,initiating');
 		preDeal();
-		fs.writeFile(path,'{"page":['+currentPage+'],"data":[]}',function(err){
-			if (err){
-				console.error(err);
-			}
-		});
+		event.on('preDealed',function(){
+			fs.writeFile(path,'{"page":'+currentPage+',"data":[]}',function(err){
+				if (err){
+					console.error(err);
+				}
+			});
+		})
 		data=[];
 	}
 });
