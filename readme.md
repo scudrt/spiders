@@ -11,7 +11,7 @@ dytt(电影天堂):
 
 	命令：
 		node dytt [delaytime]
-		[delaytime]: 设置网页的请求间隔(秒),默认12秒
+		[delaytime]: 设置网页的请求间隔(秒),默认15秒
 
 segmentfault(思否):
 	爬取思否里前端板块的最新新闻。
