@@ -1,4 +1,4 @@
-//1.1.3
+//1.1.4
 var fs = require('fs');
 var http = require('http');
 var async = require('async');
@@ -11,7 +11,7 @@ var url = 'http://www.ygdy8.com/html/gndy/dyzz/list_23_';
 var path = './movies.json';
 var data = '', pageData = [];
 var currentPage = 0;
-var timeDelay = 12; //x seconds every page 
+var timeDelay = 15; //x seconds every page 
 var event = new events.EventEmitter();
 
 var Movie = function(title,url,download){
@@ -127,7 +127,9 @@ event.on('moviedone',function(){
 	pageData = [];
 	setTimeout(pageFetch,timeDelay*1000);
 });
-if (process.argv[2] !== undefined){
-	timeDelay = Number(process.argv[2]);
-}
+
+event.on('error',function(err){
+	console.error(err);
+});
+
 event.on('initok',pageFetch);
